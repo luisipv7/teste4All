@@ -9,10 +9,6 @@ Crud simples back e frontend(usuário)
 * Docker
 * docker-compose
 
-## Usuário POSTGRES
-
-* username: postgres
-* password: Gvbrs101
 
 ## Executar o Projeto
 1. Clonar o projeto
