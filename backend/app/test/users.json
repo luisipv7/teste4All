@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "username": "luis.santos",
+    "email": "luis@mail.com",
+    "password": "f8199a7d-7d60-5100-b052-90a6e133ce77",
+    "createdAt": "2021-05-04T18:35:02.574Z",
+    "updatedAt": "2021-05-04T18:35:02.574Z"
+  },
+  {
+    "id": 2,
+    "username": "luis.flores",
+    "email": "luis.flores@mail.com",
+    "password": "f8199a7d-7d60-5100-b052-90a6e133ce77",
+    "createdAt": "2021-05-04T18:39:01.222Z",
+    "updatedAt": "2021-05-04T18:39:01.222Z"
+  }
+]
