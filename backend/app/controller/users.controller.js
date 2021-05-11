@@ -1,14 +1,9 @@
-const db = require('../models');
-const Users = db.users;
-const Op = db.Sequelize.Op;
-const { fromString } = require('uuidv4')
-const jwt = require('jsonwebtoken');
+const User = require('../models/users.model')
+const jwt = require('jsonwebtoken')
+const { v5: uuid } = require("uuid")
+require('dotenv').config()
+const MY_NAMESPACE = '55238d15-c926-4598-b49d-cf4e913ba13c';
 
-const dotenv = require('dotenv');
-// get config vars
-dotenv.config();
-// access config var
-process.env.TOKEN_SECRET;
 
 module.exports = {
   async create (req, res) {
@@ -18,127 +13,96 @@ module.exports = {
       });
       return;
     }
-    const user = {
-      username: req.body.username,
-      email: req.body.email,
-      password: fromString(req.body.password)
-    };
 
-    Users.create(user)
-      .then(data => {
-        res.send(data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || 'Algum erro ocorreu enquanto criava o usuário.'
-        })
-      })
+    try {
+      const user = {
+        username: req.body.username,
+        email: req.body.email,
+        password: uuid(req.body.password, MY_NAMESPACE)
+      };
+
+      await User.create(user)
+      return res.status(200).json(user)
+
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+
+
   },
 
   async findAll (req, res) {
-    const email = req.body.email
-    let condition = email ? { email: { [Op.iLike]: `%${email}%` } } : null
+    const users = await User.findAll()
 
-    Users.findAll({ where: condition })
-      .then(data => {
-        res.send(data)
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || 'Algum erro ocorreu enquanto recuperava os usuários.'
-        })
-      })
+    if (users) {
+      return res.status(200).json(users)
+    }
+
+    throw new Error('Não foi possivel encontrar informações!')
+
   },
   async findOne (req, res) {
-    const id = req.params.id
 
-    Users.findByPk(id)
-      .then(data => {
-        res.send(data)
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: 'Erro ao recuperar o tutorial com id' + id
-        })
-      })
+    try {
+      const id = req.params.id
+      const userFound = await User.findByPk(id)
+
+      if (userFound) {
+        return res.status(200).json(userFound)
+      }
+
+      throw new Error('Usuário inexistente!')
+
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
   },
 
   async update (req, res) {
-    const id = req.params.id
+    try {
+      const user = {
+        username: req.body.username,
+        email: req.body.email,
+        password: uuid(req.body.password, MY_NAMESPACE)
+      };
+      const id = await req.params.id
+      const [update] = await User.update(user, {
+        where: { id }
+      })
 
-    Users.update(req.body, {
-      where: { id }
-    })
-      .then(num => {
-        if (num === 1) {
-          res.send({
-            message: 'Usuário foi atualizado com sucesso!'
-          })
-        } else {
-          res.send({
-            message: `Não é possível atualizar o usuário com id = ${id}. Talvez usuário não tenha sido encontrado ou req.body está vazio!`
-          })
-        }
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: 'Erro ao atualizar o usuário com o id: ' + id
-        })
-      })
+      if (update) {
+        const userUpdated = await User.findByPk(id)
+        return res.status(200).json(userUpdated)
+      }
+      throw new Error('Usuário inexistente!')
+
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
   },
+
   async delete (req, res) {
-    const id = req.params.id
+    try {
+      const id = req.params.id
+      const userDeleted = await User.destroy({ where: { id } })
 
-    Users.destroy({
-      where: { id }
-    })
-      .then(num => {
-        if (num === 1) {
-          res.send({
-            message: 'Usuário foi deletado com sucesso!'
-          })
-        } else {
-          res.send({
-            message: `Não é possível deletar o usuário com id = ${id}. Talvez usuário não tenha sido encontrado ou req.body está vazio!`
-          })
-        }
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: 'Erro ao deletar o usuário com o id: ' + id
-        })
-      })
+      if (userDeleted) {
+        const userDeleteded = await User.findByPk(id)
+        return res.status(200).json(userDeleteded)
+      }
+      throw new Error('Usuário inexistente!')
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+
   },
-  async deleteAll (req, res) {
-    Users.destroy({
-      where: {},
-      truncate: true
-    })
-      .then(nums => {
-        res.send({ message: `${nums} usuários foram deletado com sucesso!` })
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || 'Ocorreu algum erro ao remover todos os usuários.'
-        })
-      })
-  },
+
   async login (req, res) {
     const email = req.body.email
-    let condition = email ? { email: { [Op.iLike]: `%${email}%` } } : null
-
-    const Has = await Users.findAll({ where: condition })
-      .then(data => {
-        return data.map(R => R.dataValues)
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: err.message || 'Algum erro ocorreu enquanto recuperava os usuários.'
-        })
-      })
-    const pass = fromString(req.body.password)
-    const confirmPass = Has.map(R => R.password.includes(pass))
-    if (!confirmPass[0]) {
+    const dataValues = await User.findOne({ where: { email } })
+    const pass = uuid(req.body.password, MY_NAMESPACE)
+    const confirmPass = dataValues.password.localeCompare(pass)
+    if (confirmPass !== 0) {
       res.status(400).send({
         message: 'Usuário não encontrado!'
       })

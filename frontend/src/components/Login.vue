@@ -82,6 +82,8 @@
         const Response = await this.$axios(axiosConfig).then(R => R.data).catch(this.AxiosCatch)
         localStorage.setItem('ACCESS_TOKEN', Response)
         await this.asyncReload('users')
+        await this.$acl.change('authenticated')
+        await this.$router.push('/')
       },
       async Reset () {
         this.users = []

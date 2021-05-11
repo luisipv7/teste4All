@@ -5,14 +5,11 @@ services:
     image: postgres
     restart: always
     environment:
-    - POSTGRES_PASSWORD=G****101
+    - POSTGRES_PASSWORD=Gvbrs101
     - POSTGRES_DB=twitter
     - TZ=America/Sao_Paulo
     volumes: 
     - ./backend/:/usr/src/app
-    - /usr/src/app/node_modules
-    - /etc/localtime:/etc/localtime:ro
-    - /etc/timezone:/etc/timezone:ro
     - type: volume
       source: db-volume
       target: /data/db
@@ -20,13 +17,15 @@ services:
   app:
     container_name: app
     build: ./backend
+    entrypoint: ["/bin/bash", "./entrypoint.sh"]
     depends_on: 
      - db
     environment: 
-     - USER=postgres
-     - PASSWORD=G****101
-     - DATABASE=twitter
+     - DIALECT=postgres
      - HOST=postgres-server
+     - USER=postgres
+     - DATABASE=twitter
+     - PASSWORD=Gvbrs101
      - DB_PORT=5432
      - WAIT_HOSTS=db:5432
     ports: 

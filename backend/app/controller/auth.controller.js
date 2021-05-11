@@ -1,9 +1,6 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-// get config vars
-dotenv.config();
-// access config var
-process.env.TOKEN_SECRET;
+dotenv.config()
 module.exports = {
   async authenticateToken (req, res, next) {
     const authHeader = req.headers['authorization']
